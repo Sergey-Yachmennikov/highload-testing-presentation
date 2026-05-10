@@ -1,0 +1,4 @@
+https://github.com/Sergey-Yachmennikov/highload-testing-presentation.git
+
+
+git remote add origin https://github.com/Sergey-Yachmennikov/highload-testing-presentation.git
