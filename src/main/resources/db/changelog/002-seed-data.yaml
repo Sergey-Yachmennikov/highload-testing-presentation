@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: highload-demo
+      comment: "Seed data: 150 users, 150 products, 150 orders, 150 order items"
+      changes:
+        - sqlFile:
+            path: db/changelog/seed-data.sql
+            relativeToChangelogFile: false

@@ -1,0 +1,361 @@
+openapi: 3.0.3
+info:
+  title: Highload Testing Presentation API
+  description: |
+    Demo API for load testing presentation. Contains intentionally "good" and "bad"
+    endpoints to demonstrate common performance problems and their solutions.
+  version: 0.0.1-SNAPSHOT
+
+servers:
+  - url: http://localhost:8082
+    description: Local development server
+
+tags:
+  - name: Products
+    description: Product endpoints (pagination, caching, search)
+  - name: Orders
+    description: Order endpoints (N+1 problem, connection pool exhaustion)
+
+paths:
+  /api/v1/products:
+    get:
+      tags: [Products]
+      summary: Get products (paginated)
+      description: |
+        GOOD: Returns paginated results. Fast even with 50k products in the database.
+      operationId: getProducts
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: "Sort field and direction (e.g. name,asc)"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProduct'
+
+  /api/v1/products/slow:
+    get:
+      tags: [Products]
+      summary: Get ALL products (no pagination)
+      description: |
+        BAD: Loads all 50k products into memory and serializes a huge JSON response.
+        Use this to demonstrate the impact of missing pagination under load.
+      operationId: getAllProductsSlow
+      responses:
+        '200':
+          description: Full list of all products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /api/v1/products/search:
+    get:
+      tags: [Products]
+      summary: Search products by name
+      description: |
+        Performance depends on whether the V3 migration (index on products.name) has been applied.
+        Before index: full table scan on 50k rows. After index: fast lookup.
+      operationId: searchByName
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Product name substring to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of matching products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /api/v1/products/{productId}:
+    get:
+      tags: [Products]
+      summary: Get product by ID (no cache)
+      description: |
+        Without cache: every request hits the database.
+        Compare with /api/v1/products/{productId}/cached under load.
+      operationId: getProductById
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          example: 42
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '500':
+          description: Product not found
+
+  /api/v1/products/{productId}/cached:
+    get:
+      tags: [Products]
+      summary: Get product by ID (with cache)
+      description: |
+        GOOD: First call hits DB, subsequent calls served from Caffeine cache
+        (TTL 60s, max 1000 entries). Dramatically reduces DB load under high traffic.
+      operationId: getProductByIdCached
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          example: 42
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Product details (possibly from cache)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '500':
+          description: Product not found
+
+  /api/v1/products/category/{category}:
+    get:
+      tags: [Products]
+      summary: Get products by category (paginated)
+      operationId: getProductsByCategory
+      parameters:
+        - name: category
+          in: path
+          required: true
+          description: "Category name (e.g. Electronics, Books, Clothing, Home, Sports, Toys, Food, Beauty, Auto, Garden)"
+          example: Electronics
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of products in category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProduct'
+
+  /api/v1/orders/user/{userId}:
+    get:
+      tags: [Orders]
+      summary: Get orders by user ID (N+1 problem)
+      description: |
+        BAD: Fetches orders with lazy loading. For each order, items are loaded separately,
+        and for each item, the product is loaded separately. Generates N+1 SQL queries.
+      operationId: getOrdersByUserId
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          example: 7
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 150
+      responses:
+        '200':
+          description: List of user orders (with N+1 queries)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /api/v1/orders/user/{userId}/optimized:
+    get:
+      tags: [Orders]
+      summary: Get orders by user ID (optimized with JOIN FETCH)
+      description: |
+        GOOD: Single query with JOIN FETCH loads orders, items, and products
+        in one SQL statement. Compare response times with the N+1 endpoint.
+      operationId: getOrdersByUserIdOptimized
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          example: 7
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 150
+      responses:
+        '200':
+          description: List of user orders (single optimized query)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /api/v1/orders/blocking:
+    get:
+      tags: [Orders]
+      summary: Blocking operation (connection pool exhaustion demo)
+      description: |
+        BAD: Holds a database connection for 5 seconds via Thread.sleep() inside a transaction.
+        With HikariCP pool size = 10, sending 15+ concurrent requests will exhaust
+        the connection pool and cause timeouts for subsequent requests.
+      operationId: blockingOperation
+      responses:
+        '200':
+          description: Returns after 5 second delay
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Done after 5 seconds of blocking"
+        '500':
+          description: Connection pool exhausted (timeout)
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        name:
+          type: string
+          example: "Product 42"
+        description:
+          type: string
+          example: "Description for product 42. Sample product for load testing."
+        price:
+          type: number
+          format: decimal
+          example: 336.34
+        category:
+          type: string
+          example: "Books"
+        createdAt:
+          type: string
+          format: date-time
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 7
+        user:
+          $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, CANCELLED]
+          example: "COMPLETED"
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 7
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+          example: 3
+        price:
+          type: number
+          format: decimal
+          example: 48.85
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 7
+        username:
+          type: string
+          example: "user_7"
+        email:
+          type: string
+          example: "user_7@example.com"
+        createdAt:
+          type: string
+          format: date-time
+
+    PageProduct:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        totalElements:
+          type: integer
+          format: int64
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+        size:
+          type: integer
+          example: 20
+        number:
+          type: integer
+          example: 0
+        first:
+          type: boolean
+        last:
+          type: boolean
+        empty:
+          type: boolean
