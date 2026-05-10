@@ -1,0 +1,26 @@
+# List all available recipes
+default:
+    @just --list
+
+# Run pagination vs no pagination test
+pagination:
+    k6 run 01_pagination_test.js
+
+# Run N+1 vs JOIN FETCH test
+n-plus-one:
+    k6 run 02_n_plus_one_test.js
+
+# Run cache vs no cache test
+caching:
+    k6 run 03_caching_test.js
+
+# Run connection pool exhaustion test
+connection-pool:
+    k6 run 04_connection_pool_test.js
+
+# Run full mixed load test
+full-load:
+    k6 run 05_full_load_test.js
+
+# Run all tests sequentially
+all: pagination n-plus-one caching connection-pool full-load

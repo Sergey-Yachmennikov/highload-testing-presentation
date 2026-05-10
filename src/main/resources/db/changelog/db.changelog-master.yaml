@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/002-seed-data.yaml
   - include:
       file: db/changelog/003-add-indexes.yaml
+  - include:
+      file: db/changelog/004-add-bulk-data.yaml

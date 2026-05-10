@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: highload-demo
+      comment: "Bulk seed data: scale up to 50k products, 1000 users, 10000 orders"
+      changes:
+        - sqlFile:
+            path: db/changelog/bulk-seed-data.sql
+            relativeToChangelogFile: false
