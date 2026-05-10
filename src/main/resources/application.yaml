@@ -1,21 +1,18 @@
 spring:
   application:
-    name: highload-testing-perentation
-
-    datasource:
-      url: jdbc:postgresql://localhost:5434/highload_testing_db
-      username: highload_testing_user
-      password: highload_testing_pass
-      driver-class-name: org.postgresql.Driver
-
-    jpa:
+    name: highload-testing-presentation
+  datasource:
+    url: jdbc:postgresql://localhost:5434/highload_testing_db
+    username: highload_testing_user
+    password: highload_testing_pass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
       hibernate:
-        ddl-auto: none
-      show-sql: true
-      properties:
-        hibernate:
-          format_sql: true
+        format_sql: true
 
-  server:
-    port: 8082
-
+server:
+  port: 8082
