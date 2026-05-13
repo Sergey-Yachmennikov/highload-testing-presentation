@@ -1,4 +1,4 @@
-package com.highload.highload_testing_perentation.config;
+package com.highload.highload_testing_presentation.config;
 
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Value;

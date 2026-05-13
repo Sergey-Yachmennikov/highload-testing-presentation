@@ -1,7 +1,7 @@
-package com.highload.highload_testing_perentation.controller;
+package com.highload.highload_testing_presentation.controller;
 
-import com.highload.highload_testing_perentation.entity.Product;
-import com.highload.highload_testing_perentation.service.ProductService;
+import com.highload.highload_testing_presentation.entity.Product;
+import com.highload.highload_testing_presentation.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

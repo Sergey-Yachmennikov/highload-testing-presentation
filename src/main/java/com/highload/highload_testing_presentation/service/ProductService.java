@@ -1,7 +1,7 @@
-package com.highload.highload_testing_perentation.service;
+package com.highload.highload_testing_presentation.service;
 
-import com.highload.highload_testing_perentation.entity.Product;
-import com.highload.highload_testing_perentation.repository.ProductRepository;
+import com.highload.highload_testing_presentation.entity.Product;
+import com.highload.highload_testing_presentation.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;

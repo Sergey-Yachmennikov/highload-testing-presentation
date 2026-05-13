@@ -1,13 +1,15 @@
-package com.highload.highload_testing_perentation.service;
+package com.highload.highload_testing_presentation.service;
 
-import com.highload.highload_testing_perentation.entity.Order;
-import com.highload.highload_testing_perentation.entity.OrderItem;
-import com.highload.highload_testing_perentation.repository.OrderRepository;
+import com.highload.highload_testing_presentation.entity.Order;
+import com.highload.highload_testing_presentation.entity.OrderItem;
+import com.highload.highload_testing_presentation.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -44,5 +46,17 @@ public class OrderService {
             Thread.currentThread().interrupt();
         }
         return "Done after 5 seconds of blocking";
+    }
+
+    // GOOD: async version - does NOT hold a DB connection during sleep
+    // The heavy work runs in a separate thread pool, freeing the connection pool
+    @Async("asyncExecutor")
+    public CompletableFuture<String> asyncOperation() {
+        try {
+            Thread.sleep(5000); // simulates long computation WITHOUT holding DB connection
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return CompletableFuture.completedFuture("Done after 5 seconds of async processing");
     }
 }

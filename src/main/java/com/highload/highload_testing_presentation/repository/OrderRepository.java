@@ -1,6 +1,6 @@
-package com.highload.highload_testing_perentation.repository;
+package com.highload.highload_testing_presentation.repository;
 
-import com.highload.highload_testing_perentation.entity.Order;
+import com.highload.highload_testing_presentation.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

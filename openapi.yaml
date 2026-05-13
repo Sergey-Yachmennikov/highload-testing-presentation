@@ -252,6 +252,24 @@ paths:
         '500':
           description: Connection pool exhausted (timeout)
 
+  /api/v1/orders/async:
+    get:
+      tags: [Orders]
+      summary: Async operation (no connection pool exhaustion)
+      description: |
+        GOOD: Processes the same 5-second delay asynchronously using a separate thread pool.
+        Does NOT hold a database connection during the wait. Compare with /api/v1/orders/blocking
+        under load — this endpoint won't exhaust the connection pool.
+      operationId: asyncOperation
+      responses:
+        '200':
+          description: Returns after 5 second async delay
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Done after 5 seconds of async processing"
+
 components:
   schemas:
     Product:

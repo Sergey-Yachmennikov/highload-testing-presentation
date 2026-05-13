@@ -1,10 +1,10 @@
-package com.highload.highload_testing_perentation;
+package com.highload.highload_testing_presentation;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HighloadTestingPerentationApplicationTests {
+class HighloadTestingPresentationApplicationTests {
 
 	@Test
 	void contextLoads() {

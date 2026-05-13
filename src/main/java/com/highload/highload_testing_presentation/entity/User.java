@@ -1,4 +1,4 @@
-package com.highload.highload_testing_perentation.entity;
+package com.highload.highload_testing_presentation.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

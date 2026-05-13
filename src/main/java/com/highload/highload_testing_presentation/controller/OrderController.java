@@ -1,11 +1,12 @@
-package com.highload.highload_testing_perentation.controller;
+package com.highload.highload_testing_presentation.controller;
 
-import com.highload.highload_testing_perentation.entity.Order;
-import com.highload.highload_testing_perentation.service.OrderService;
+import com.highload.highload_testing_presentation.entity.Order;
+import com.highload.highload_testing_presentation.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -31,5 +32,11 @@ public class OrderController {
     @GetMapping("/blocking")
     public String blockingOperation() {
         return orderService.blockingOperation();
+    }
+
+    // GOOD: async processing - does NOT hold DB connection, uses separate thread pool
+    @GetMapping("/async")
+    public CompletableFuture<String> asyncOperation() {
+        return orderService.asyncOperation();
     }
 }
